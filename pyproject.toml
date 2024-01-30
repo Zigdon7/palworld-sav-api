@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "palword-save-tools"
+version = "0.1.0"
+description = "A backend service which will handle user interactions with a learning agent."
+authors = ["Zigdon7"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.11.0"
+fastapi = "^0.103.2"
+fastapi-router-controller = { git = "https://github.com/ResTrekAI/fastapi-router-controller.git"}
+uvicorn = "^0.23.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

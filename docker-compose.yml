@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:      
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      target: production  # Specifies the target stage to build
+    environment:
+      APP__ENVIRONMENT: development
+      DB__DB_NAME: wanda_db
+      DB__DB_USER: user
+      DB__DB_PASSWORD: password
+      DB__DB_HOST: database
+      DB__DB_PORT: 5432
+    ports:
+      - "8001:8001"
+    volumes:
+    - ./api:/app/api
+    depends_on:
+      - database
+
+  database:
+    image: postgres:latest # or mongo:latest
+    ports:
+      - "5432:5432" # change port for MongoDB
+    environment:
+      POSTGRES_DB: wanda_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/postgresql/data # or /data/db for MongoDB
+
+volumes:
+  db-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./database/data
