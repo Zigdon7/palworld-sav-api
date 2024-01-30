@@ -17,6 +17,8 @@ services:
       - "8001:8001"
     volumes:
     - ./api:/app/api
+    - ./inputs:/app/inputs
+    - ./outputs:/app/outputs
     depends_on:
       - database
 

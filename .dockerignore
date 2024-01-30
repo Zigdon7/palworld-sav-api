@@ -1,2 +1,4 @@
+/inputs/*
+/outputs/*
 .weaviate/
 .git

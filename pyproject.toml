@@ -10,7 +10,10 @@ python = "~3.11.0"
 fastapi = "^0.103.2"
 fastapi-router-controller = { git = "https://github.com/ResTrekAI/fastapi-router-controller.git"}
 uvicorn = "^0.23.2"
-
+pyyaml = "^6.0.1"
+pydantic-settings = "^2.1.0"
+python-multipart = "=0.0.6"
+aiofiles = "^23.2.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

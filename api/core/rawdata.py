@@ -1,6 +1,6 @@
 from typing import Any, Sequence
 
-from lib.archive import *
+from api.core.archive import *
 
 
 def decode_group_data(

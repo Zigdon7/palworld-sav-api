@@ -27,9 +27,9 @@ class AppConfig(BaseModel):
     root_path: str
     environment: str
 
-class ApIConfig(BaseModel):
-    """Api keys"""
-    open_ai: str
+# class ApIConfig(BaseModel):
+#     """Api keys"""
+#     open_ai: str
 
 class DBConfig(BaseModel):
     """Database configuration settings."""
@@ -113,7 +113,7 @@ class Config(BaseSettings):
     app: AppConfig
     db: DBConfig
     log: LogConfig
-    api_keys: ApIConfig
+    # api_keys: ApIConfig
     model_config = SettingsConfigDict(env_nested_delimiter="__")
 
     @classmethod

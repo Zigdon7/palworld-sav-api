@@ -1,4 +1,4 @@
-from lib.rawdata import *
+from api.core.rawdata import *
 
 PALWORLD_TYPE_HINTS = {
     ".worldSaveData.CharacterContainerSaveData.Key": "StructProperty",

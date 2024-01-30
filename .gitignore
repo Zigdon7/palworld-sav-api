@@ -6,4 +6,6 @@ localtest
 /rust
 /legacy
 __pycache__
-/testsave/Level2*
+/outputs/*
+/inputs/Level2*
+/database/data/*
