@@ -1,9 +1,9 @@
-from typing import Any, Sequence
+from typing import Sequence
 
 from api.core.archive import *
 
 
-def decode_group_data(
+def decode(
     reader: FArchiveReader, type_name: str, size: int, path: str
 ) -> dict[str, Any]:
     if type_name != "MapProperty":
@@ -14,15 +14,11 @@ def decode_group_data(
     for group in group_map:
         group_type = group["value"]["GroupType"]["value"]["value"]
         group_bytes = group["value"]["RawData"]["value"]["values"]
-        group["value"]["RawData"]["value"] = decode_group_data_bytes(
-            group_bytes, group_type
-        )
+        group["value"]["RawData"]["value"] = decode_bytes(group_bytes, group_type)
     return value
 
 
-def decode_group_data_bytes(
-    group_bytes: Sequence[int], group_type: str
-) -> dict[str, Any]:
+def decode_bytes(group_bytes: Sequence[int], group_type: str) -> dict[str, Any]:
     reader = FArchiveReader(bytes(group_bytes))
     group_data = {
         "group_type": group_type,
@@ -75,7 +71,7 @@ def decode_group_data_bytes(
     return group_data
 
 
-def encode_group_data(
+def encode(
     writer: FArchiveWriter, property_type: str, properties: dict[str, Any]
 ) -> int:
     if property_type != "MapProperty":
@@ -86,12 +82,12 @@ def encode_group_data(
         if "values" in group["value"]["RawData"]["value"]:
             continue
         p = group["value"]["RawData"]["value"]
-        encoded_bytes = encode_group_data_bytes(p)
+        encoded_bytes = encode_bytes(p)
         group["value"]["RawData"]["value"] = {"values": [b for b in encoded_bytes]}
     return writer.property_inner(property_type, properties)
 
 
-def encode_group_data_bytes(p: dict[str, Any]) -> bytes:
+def encode_bytes(p: dict[str, Any]) -> bytes:
     writer = FArchiveWriter()
     writer.guid(p["group_id"])
     writer.fstring(p["group_name"])
@@ -119,47 +115,5 @@ def encode_group_data_bytes(p: dict[str, Any]) -> bytes:
             writer.guid(p["players"][i]["player_uid"])
             writer.i64(p["players"][i]["player_info"]["last_online_real_time"])
             writer.fstring(p["players"][i]["player_info"]["player_name"])
-    encoded_bytes = writer.bytes()
-    return encoded_bytes
-
-
-def decode_character_data(
-    reader: FArchiveReader, type_name: str, size: int, path: str
-) -> dict[str, Any]:
-    if type_name != "ArrayProperty":
-        raise Exception(f"Expected ArrayProperty, got {type_name}")
-    value = reader.property(type_name, size, path, allow_custom=False)
-    char_bytes = value["value"]["values"]
-    value["value"] = decode_character_data_bytes(char_bytes)
-    return value
-
-
-def decode_character_data_bytes(char_bytes: Sequence[int]) -> dict[str, Any]:
-    reader = FArchiveReader(bytes(char_bytes))
-    char_data = {}
-    char_data["object"] = reader.properties_until_end()
-    char_data["unknown_bytes"] = reader.byte_list(4)
-    char_data["group_id"] = reader.guid()
-    if not reader.eof():
-        raise Exception("Warning: EOF not reached")
-    return char_data
-
-
-def encode_character_data(
-    writer: FArchiveWriter, property_type: str, properties: dict[str, Any]
-) -> int:
-    if property_type != "ArrayProperty":
-        raise Exception(f"Expected ArrayProperty, got {property_type}")
-    del properties["custom_type"]
-    encoded_bytes = encode_character_data_bytes(properties["value"])
-    properties["value"] = {"values": [b for b in encoded_bytes]}
-    return writer.property_inner(property_type, properties)
-
-
-def encode_character_data_bytes(p: dict[str, Any]) -> bytes:
-    writer = FArchiveWriter()
-    writer.properties(p["object"])
-    writer.write(bytes(p["unknown_bytes"]))
-    writer.guid(p["group_id"])
     encoded_bytes = writer.bytes()
     return encoded_bytes
