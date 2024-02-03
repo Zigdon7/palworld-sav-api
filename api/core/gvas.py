@@ -118,16 +118,22 @@ class GvasFile:
         data: bytes,
         type_hints: dict[str, str] = {},
         custom_properties: dict[str, tuple[Callable, Callable]] = {},
+        allow_nan: bool = True,
     ) -> "GvasFile":
         gvas_file = GvasFile()
-        reader = FArchiveReader(data, type_hints, custom_properties)
-        gvas_file.header = GvasHeader.read(reader)
-        gvas_file.properties = reader.properties_until_end()
-        gvas_file.trailer = reader.read_to_end()
-        if gvas_file.trailer != b"\x00\x00\x00\x00":
-            print(
-                f"{len(gvas_file.trailer)} bytes of trailer data, file may not have fully parsed"
-            )
+        with FArchiveReader(
+            data,
+            type_hints=type_hints,
+            custom_properties=custom_properties,
+            allow_nan=allow_nan,
+        ) as reader:
+            gvas_file.header = GvasHeader.read(reader)
+            gvas_file.properties = reader.properties_until_end()
+            gvas_file.trailer = reader.read_to_end()
+            if gvas_file.trailer != b"\x00\x00\x00\x00":
+                print(
+                    f"{len(gvas_file.trailer)} bytes of trailer data, file may not have fully parsed"
+                )
         return gvas_file
 
     @staticmethod
