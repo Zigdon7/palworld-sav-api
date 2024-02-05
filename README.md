@@ -1,4 +1,4 @@
-# palworld-save-tools
+# palworld-sav-api
 Tools for converting Palworld .sav files to JSON and back.
 
 > [!IMPORTANT]
