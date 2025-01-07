@@ -1,6 +1,6 @@
 from typing import Any, Sequence
 
-from api.core.archive import *
+from palworld_save_tools.archive import *
 
 # EPalMapObjectConcreteModelModuleType::None = 0,
 # EPalMapObjectConcreteModelModuleType::ItemContainer = 1,

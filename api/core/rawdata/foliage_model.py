@@ -15,19 +15,19 @@ def decode(
 
 
 def decode_bytes(
-    parent_reader: FArchiveReader, c_bytes: Sequence[int]
-) -> Optional[dict[str, Any]]:
-    if len(c_bytes) == 0:
-        return None
-    reader = parent_reader.internal_copy(bytes(c_bytes), debug=False)
-    data = {}
-    data["permission"] = {
-        "type_a": reader.tarray(lambda r: r.byte()),
-        "type_b": reader.tarray(lambda r: r.byte()),
-        "item_static_ids": reader.tarray(lambda r: r.fstring()),
+    parent_reader: FArchiveReader, b_bytes: Sequence[int]
+) -> dict[str, Any]:
+    reader = parent_reader.internal_copy(bytes(b_bytes), debug=False)
+    data: dict[str, Any] = {}
+    data["model_id"] = reader.fstring()
+    data["foliage_preset_type"] = reader.byte()
+    data["cell_coord"] = {
+        "x": reader.i64(),
+        "y": reader.i64(),
+        "z": reader.i64(),
     }
     if not reader.eof():
-        data["trailing_unparsed_data"] = [b for b in reader.read_to_end()]
+        raise Exception("Warning: EOF not reached")
     return data
 
 
@@ -43,15 +43,13 @@ def encode(
 
 
 def encode_bytes(p: dict[str, Any]) -> bytes:
-    if p is None:
-        return bytes()
     writer = FArchiveWriter()
-    writer.tarray(lambda w, d: w.byte(d), p["permission"]["type_a"])
-    writer.tarray(lambda w, d: w.byte(d), p["permission"]["type_b"])
-    writer.tarray(
-        lambda w, d: (w.fstring(d), None)[1], p["permission"]["item_static_ids"]
-    )
-    if "trailing_unparsed_data" in p:
-        writer.write(bytes(p["trailing_unparsed_data"]))
+
+    writer.fstring(p["model_id"])
+    writer.byte(p["foliage_preset_type"])
+    writer.i64(p["cell_coord"]["x"])
+    writer.i64(p["cell_coord"]["y"])
+    writer.i64(p["cell_coord"]["z"])
+
     encoded_bytes = writer.bytes()
     return encoded_bytes

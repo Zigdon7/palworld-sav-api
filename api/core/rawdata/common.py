@@ -1,6 +1,6 @@
 from typing import Any
 
-from api.core.archive import Any, FArchiveReader, FArchiveWriter
+from palworld_save_tools.archive import Any, FArchiveReader, FArchiveWriter
 
 
 def pal_item_and_num_read(reader: FArchiveReader) -> dict[str, Any]:

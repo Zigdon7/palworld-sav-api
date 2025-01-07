@@ -1,7 +1,7 @@
 from typing import Any, Sequence
 
-from api.core.archive import *
-from api.core.rawdata import (
+from palworld_save_tools.archive import *
+from palworld_save_tools.rawdata import (
     build_process,
     connector,
     map_concrete_model,

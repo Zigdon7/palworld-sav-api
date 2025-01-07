@@ -107,10 +107,10 @@ PALWORLD_CUSTOM_PROPERTIES: dict[
         work_collection.decode,
         work_collection.encode,
     ),
-    ".worldSaveData.BaseCampSaveData.Value.ModuleMap": (
-        base_camp_module.decode,
-        base_camp_module.encode,
-    ),
+    # ".worldSaveData.BaseCampSaveData.Value.ModuleMap": (
+    #     base_camp_module.decode,
+    #     base_camp_module.encode,
+    # ),
     ".worldSaveData.WorkSaveData": (work.decode, work.encode),
     # ".worldSaveData.MapObjectSaveData": (
     #     map_object.decode,

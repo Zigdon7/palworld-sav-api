@@ -9,26 +9,23 @@ def decode(
     if type_name != "ArrayProperty":
         raise Exception(f"Expected ArrayProperty, got {type_name}")
     value = reader.property(type_name, size, path, nested_caller_path=path)
-    data_bytes = value["value"]["values"]
-    value["value"] = decode_bytes(reader, data_bytes)
+    char_bytes = value["value"]["values"]
+    value["value"] = decode_bytes(reader, char_bytes)
     return value
 
 
 def decode_bytes(
-    parent_reader: FArchiveReader, c_bytes: Sequence[int]
-) -> Optional[dict[str, Any]]:
-    if len(c_bytes) == 0:
-        return None
-    reader = parent_reader.internal_copy(bytes(c_bytes), debug=False)
-    data = {}
-    data["permission"] = {
-        "type_a": reader.tarray(lambda r: r.byte()),
-        "type_b": reader.tarray(lambda r: r.byte()),
-        "item_static_ids": reader.tarray(lambda r: r.fstring()),
+    parent_reader: FArchiveReader, char_bytes: Sequence[int]
+) -> dict[str, Any]:
+    reader = parent_reader.internal_copy(bytes(char_bytes), debug=False)
+    char_data = {
+        "object": reader.properties_until_end(),
+        "unknown_bytes": reader.byte_list(4),
+        "group_id": reader.guid(),
     }
     if not reader.eof():
-        data["trailing_unparsed_data"] = [b for b in reader.read_to_end()]
-    return data
+        raise Exception("Warning: EOF not reached")
+    return char_data
 
 
 def encode(
@@ -43,15 +40,9 @@ def encode(
 
 
 def encode_bytes(p: dict[str, Any]) -> bytes:
-    if p is None:
-        return bytes()
     writer = FArchiveWriter()
-    writer.tarray(lambda w, d: w.byte(d), p["permission"]["type_a"])
-    writer.tarray(lambda w, d: w.byte(d), p["permission"]["type_b"])
-    writer.tarray(
-        lambda w, d: (w.fstring(d), None)[1], p["permission"]["item_static_ids"]
-    )
-    if "trailing_unparsed_data" in p:
-        writer.write(bytes(p["trailing_unparsed_data"]))
+    writer.properties(p["object"])
+    writer.write(bytes(p["unknown_bytes"]))
+    writer.guid(p["group_id"])
     encoded_bytes = writer.bytes()
     return encoded_bytes

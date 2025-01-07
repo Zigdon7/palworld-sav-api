@@ -1,7 +1,7 @@
 from typing import Any, Sequence
 
-from api.core.archive import *
-from api.core.rawdata.common import (
+from palworld_save_tools.archive import *
+from palworld_save_tools.rawdata.common import (
     pal_item_and_num_read,
     pal_item_and_slot_writer,
 )

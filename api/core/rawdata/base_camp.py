@@ -15,19 +15,21 @@ def decode(
 
 
 def decode_bytes(
-    parent_reader: FArchiveReader, c_bytes: Sequence[int]
-) -> Optional[dict[str, Any]]:
-    if len(c_bytes) == 0:
-        return None
-    reader = parent_reader.internal_copy(bytes(c_bytes), debug=False)
-    data = {}
-    data["permission"] = {
-        "type_a": reader.tarray(lambda r: r.byte()),
-        "type_b": reader.tarray(lambda r: r.byte()),
-        "item_static_ids": reader.tarray(lambda r: r.fstring()),
+    parent_reader: FArchiveReader, b_bytes: Sequence[int]
+) -> dict[str, Any]:
+    reader = parent_reader.internal_copy(bytes(b_bytes), debug=False)
+    data = {
+        "id": reader.guid(),
+        "name": reader.fstring(),
+        "state": reader.byte(),
+        "transform": reader.ftransform(),
+        "area_range": reader.float(),
+        "group_id_belong_to": reader.guid(),
+        "fast_travel_local_transform": reader.ftransform(),
+        "owner_map_object_instance_id": reader.guid(),
     }
     if not reader.eof():
-        data["trailing_unparsed_data"] = [b for b in reader.read_to_end()]
+        raise Exception("Warning: EOF not reached")
     return data
 
 
@@ -43,15 +45,14 @@ def encode(
 
 
 def encode_bytes(p: dict[str, Any]) -> bytes:
-    if p is None:
-        return bytes()
     writer = FArchiveWriter()
-    writer.tarray(lambda w, d: w.byte(d), p["permission"]["type_a"])
-    writer.tarray(lambda w, d: w.byte(d), p["permission"]["type_b"])
-    writer.tarray(
-        lambda w, d: (w.fstring(d), None)[1], p["permission"]["item_static_ids"]
-    )
-    if "trailing_unparsed_data" in p:
-        writer.write(bytes(p["trailing_unparsed_data"]))
+    writer.guid(p["id"])
+    writer.fstring(p["name"])
+    writer.byte(p["state"])
+    writer.ftransform(p["transform"])
+    writer.float(p["area_range"])
+    writer.guid(p["group_id_belong_to"])
+    writer.ftransform(p["fast_travel_local_transform"])
+    writer.guid(p["owner_map_object_instance_id"])
     encoded_bytes = writer.bytes()
     return encoded_bytes
