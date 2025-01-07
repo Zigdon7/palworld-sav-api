@@ -1,6 +1,6 @@
 app:
-  - title: "task-management"
-  - description: "A service handling user task management and scheduling via a conversational interface."
+  - title: "palworld-sav-api"
+  - description: "Setup to handle http requests for altering the state of the PalWorld game"
   - version: "0.0.1"
   - docs_url: "/docs"
   - root_path: "/"

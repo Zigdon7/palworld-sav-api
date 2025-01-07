@@ -1,9 +1,9 @@
 import aiofiles
 import json
-from api.core.palsav import decompress_sav_to_gvas
-from api.core.gvas import GvasFile
-from api.core.paltypes import PALWORLD_CUSTOM_PROPERTIES, PALWORLD_TYPE_HINTS
-from api.core.json_tools import CustomEncoder
+from palworld_save_tools.palsav import decompress_sav_to_gvas
+from palworld_save_tools.gvas import GvasFile
+from palworld_save_tools.paltypes import PALWORLD_CUSTOM_PROPERTIES, PALWORLD_TYPE_HINTS
+from palworld_save_tools.json_tools import CustomEncoder
 from logging_config import LoggerManager
 
 logger = LoggerManager()
