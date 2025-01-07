@@ -4,6 +4,7 @@ import uuid
 from api.core.archive import UUID
 
 
+
 class CustomEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):

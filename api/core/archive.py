@@ -2,53 +2,154 @@ import io
 import math
 import os
 import struct
+import sys
 import uuid
 from typing import Any, Callable, Optional, Sequence, Union
 
-# Alias stdlib types to avoid name conflicts
 _float = float
 _bytes = bytes
 
+try:
+    from recordclass import as_dataclass
+except ImportError:
+    pass
 
-class UUID:
-    """Wrapper around uuid.UUID to delay evaluation of UUIDs until necessary"""
+if os.getenv("FORCE_STDLIB_ONLY") or "recordclass" not in sys.modules:
+    if os.getenv("DEBUG"):
+        print("Using stdlib-compatible UUID class")
 
-    __slots__ = ("raw_bytes", "parsed_uuid")
-    raw_bytes: bytes
-    parsed_uuid: Optional[uuid.UUID]
+    class UUID:
+        """Wrapper around uuid.UUID to delay evaluation of UUIDs until necessary"""
 
-    def __init__(self, raw_bytes: bytes) -> None:
-        self.raw_bytes = raw_bytes
-        self.parsed_uuid = None
+        __slots__ = ("raw_bytes", "parsed_uuid", "parsed_str")
+        raw_bytes: bytes
+        parsed_uuid: Optional[uuid.UUID]
+        parsed_str: Optional[str]
 
-    @staticmethod
-    def from_str(s: str) -> "UUID":
-        b = uuid.UUID(s).bytes
-        return UUID(
-            bytes(
-                [
-                    b[0x3],
-                    b[0x2],
-                    b[0x1],
-                    b[0x0],
-                    b[0x7],
-                    b[0x6],
-                    b[0x5],
-                    b[0x4],
-                    b[0xB],
-                    b[0xA],
-                    b[0x9],
-                    b[0x8],
-                    b[0xF],
-                    b[0xE],
-                    b[0xD],
-                    b[0xC],
-                ]
+        def __init__(self, raw_bytes: bytes) -> None:
+            self.raw_bytes = raw_bytes
+            self.parsed_uuid = None
+            self.parsed_str = None
+
+        @staticmethod
+        def from_str(s: str) -> "UUID":
+            b = uuid.UUID(s).bytes
+            return UUID(
+                bytes(
+                    [
+                        b[0x3],
+                        b[0x2],
+                        b[0x1],
+                        b[0x0],
+                        b[0x7],
+                        b[0x6],
+                        b[0x5],
+                        b[0x4],
+                        b[0xB],
+                        b[0xA],
+                        b[0x9],
+                        b[0x8],
+                        b[0xF],
+                        b[0xE],
+                        b[0xD],
+                        b[0xC],
+                    ]
+                )
             )
-        )
 
-    def __str__(self) -> str:
-        if not self.parsed_uuid:
+        def __str__(self) -> str:
+            if not self.parsed_str:
+                b = self.raw_bytes
+                self.parsed_str = "%08x-%04x-%04x-%04x-%04x%08x" % (
+                    (b[3] << 24) | (b[2] << 16) | (b[1] << 8) | (b[0]),
+                    (b[7] << 8) | (b[6]),
+                    (b[5] << 8) | (b[4]),
+                    (b[0xB] << 8) | (b[0xA]),
+                    (b[9] << 8) | (b[8]),
+                    (b[0xF] << 24) | (b[0xE] << 16) | (b[0xD] << 8) | (b[0xC]),
+                )
+            return self.parsed_str
+
+        def UUID(self) -> uuid.UUID:
+            if not self.parsed_uuid:
+                b = self.raw_bytes
+                uuid_int = (
+                    b[0xC]
+                    + (b[0xD] << 8)
+                    + (b[0xE] << 16)
+                    + (b[0xF] << 24)
+                    + (b[0x8] << 32)
+                    + (b[0x9] << 40)
+                    + (b[0xA] << 48)
+                    + (b[0xB] << 56)
+                    + (b[0x4] << 64)
+                    + (b[0x5] << 72)
+                    + (b[0x6] << 80)
+                    + (b[0x7] << 88)
+                    + (b[0x0] << 96)
+                    + (b[0x1] << 104)
+                    + (b[0x2] << 112)
+                    + (b[0x3] << 120)
+                )
+                self.parsed_uuid = uuid.UUID(int=uuid_int)
+            return self.parsed_uuid
+
+        def __eq__(self, __value: object) -> bool:
+            if isinstance(__value, UUID):
+                return self.raw_bytes == __value.raw_bytes
+            return str(self) == str(__value)
+
+        def __repr__(self) -> str:
+            return "%s.UUID('%s')" % (self.__module__, str(self))
+
+        def __hash__(self) -> int:
+            return hash(str(self))
+
+else:
+    if os.getenv("DEBUG"):
+        print("Using recordclass-based UUID class")
+
+    @as_dataclass(hashable=True, fast_new=True)
+    class UUID:
+        raw_bytes: bytes
+        @staticmethod
+        def from_str(s: str) -> "UUID":
+            b = uuid.UUID(s).bytes
+            return UUID(
+                bytes(
+                    [
+                        b[0x3],
+                        b[0x2],
+                        b[0x1],
+                        b[0x0],
+                        b[0x7],
+                        b[0x6],
+                        b[0x5],
+                        b[0x4],
+                        b[0xB],
+                        b[0xA],
+                        b[0x9],
+                        b[0x8],
+                        b[0xF],
+                        b[0xE],
+                        b[0xD],
+                        b[0xC],
+                    ]
+                )
+            )
+
+        def __str__(self) -> str:
+            b = self.raw_bytes
+            return "%08x-%04x-%04x-%04x-%04x%08x" % (
+                (b[3] << 24) | (b[2] << 16) | (b[1] << 8) | (b[0]),
+                (b[7] << 8) | (b[6]),
+                (b[5] << 8) | (b[4]),
+                (b[0xB] << 8) | (b[0xA]),
+                (b[9] << 8) | (b[8]),
+                (b[0xF] << 24) | (b[0xE] << 16) | (b[0xD] << 8) | (b[0xC]),
+            )
+
+        def UUID(self) -> uuid.UUID:
             b = self.raw_bytes
             uuid_int = (
                 b[0xC]
@@ -68,11 +169,20 @@ class UUID:
                 + (b[0x2] << 112)
                 + (b[0x3] << 120)
             )
-            self.parsed_uuid = uuid.UUID(int=uuid_int)
-        return str(self.parsed_uuid)
+            return uuid.UUID(int=uuid_int)
 
-    def __eq__(self, __value: object) -> bool:
-        return str(self) == str(__value)
+        def __eq__(self, __value: object) -> bool:
+            if isinstance(__value, UUID):
+                return self.raw_bytes == __value.raw_bytes
+            return str(self) == str(__value)
+
+        def __ne__(self, __value: object) -> bool:
+            if isinstance(__value, UUID):
+                return self.raw_bytes != __value.raw_bytes
+            return str(self) != str(__value)
+
+        def __repr__(self) -> str:
+            return "%s.UUID('%s')" % (self.__module__, str(self))
 
 
 # Specify a type for JSON-serializable objects
@@ -289,6 +399,16 @@ class FArchiveReader:
                 "id": self.optional_guid(),
                 "value": self.i32(),
             }
+        elif type_name == "UInt16Property":
+            value = {
+                "id": self.optional_guid(),
+                "value": self.u16(),
+            }
+        elif type_name == "UInt32Property":
+            value = {
+                "id": self.optional_guid(),
+                "value": self.u32(),
+            }
         elif type_name == "Int64Property":
             value = {
                 "id": self.optional_guid(),
@@ -329,6 +449,20 @@ class FArchiveReader:
             value = {
                 "value": self.bool(),
                 "id": self.optional_guid(),
+            }
+        elif type_name == "ByteProperty":
+            enum_type = self.fstring()
+            _id = self.optional_guid()
+            if enum_type == "None":
+                enum_value = self.byte()
+            else:
+                enum_value = self.fstring()
+            value = {
+                "id": _id,
+                "value": {
+                    "type": enum_type,
+                    "value": enum_value,
+                },
             }
         elif type_name == "ArrayProperty":
             array_type = self.fstring()
@@ -718,6 +852,14 @@ class FArchiveWriter:
             self.optional_guid(property.get("id", None))
             self.i32(property["value"])
             size = 4
+        elif property_type == "UInt16Property":
+            self.optional_guid(property.get("id", None))
+            self.u16(property["value"])
+            size = 2
+        elif property_type == "UInt32Property":
+            self.optional_guid(property.get("id", None))
+            self.u32(property["value"])
+            size = 4
         elif property_type == "Int64Property":
             self.optional_guid(property.get("id", None))
             self.i64(property["value"])
@@ -744,6 +886,14 @@ class FArchiveWriter:
             self.bool(property["value"])
             self.optional_guid(property.get("id", None))
             size = 0
+        elif property_type == "ByteProperty":
+            self.fstring(property["value"]["type"])
+            self.optional_guid(property.get("id", None))
+            if property["value"]["type"] == "None":
+                self.byte(property["value"]["value"])
+                size = 1
+            else:
+                size = self.fstring(property["value"]["value"])
         elif property_type == "ArrayProperty":
             self.fstring(property["array_type"])
             self.optional_guid(property.get("id", None))
@@ -838,6 +988,8 @@ class FArchiveWriter:
         for i in range(count):
             if array_type == "IntProperty":
                 self.i32(values[i])
+            elif array_type == "UInt32Property":
+                self.u32(values[i])
             elif array_type == "Int64Property":
                 self.i64(values[i])
             elif array_type == "FloatProperty":

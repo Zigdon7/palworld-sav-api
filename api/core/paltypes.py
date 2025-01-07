@@ -3,6 +3,7 @@ from typing import Any, Callable
 from api.core.archive import FArchiveReader, FArchiveWriter
 from api.core.rawdata import (
     base_camp,
+    base_camp_module,  # Add this import
     build_process,
     character,
     character_container,
@@ -48,6 +49,11 @@ PALWORLD_TYPE_HINTS: dict[str, str] = {
     ".worldSaveData.EnemyCampSaveData.EnemyCampStatusMap.Value": "StructProperty",
     ".worldSaveData.DungeonSaveData.DungeonSaveData.MapObjectSaveData.MapObjectSaveData.Model.EffectMap.Value": "StructProperty",
     ".worldSaveData.DungeonSaveData.DungeonSaveData.MapObjectSaveData.MapObjectSaveData.ConcreteModel.ModuleMap.Value": "StructProperty",
+    ".worldSaveData.InvaderSaveData.Key": "Guid",
+    ".worldSaveData.InvaderSaveData.Value": "StructProperty",
+    ".worldSaveData.OilrigSaveData.OilrigMap.Value": "StructProperty",
+    ".worldSaveData.SupplySaveData.SupplyInfos.Key": "Guid",
+    ".worldSaveData.SupplySaveData.SupplyInfos.Value": "StructProperty",
 }
 
 PALWORLD_CUSTOM_PROPERTIES: dict[
@@ -61,18 +67,6 @@ PALWORLD_CUSTOM_PROPERTIES: dict[
     ".worldSaveData.CharacterSaveParameterMap.Value.RawData": (
         character.decode,
         character.encode,
-    ),
-    ".worldSaveData.MapObjectSaveData.MapObjectSaveData.Model.BuildProcess.RawData": (
-        build_process.decode,
-        build_process.encode,
-    ),
-    ".worldSaveData.MapObjectSaveData.MapObjectSaveData.Model.Connector.RawData": (
-        connector.decode,
-        connector.encode,
-    ),
-    ".worldSaveData.MapObjectSaveData.MapObjectSaveData.Model.RawData": (
-        map_model.decode,
-        map_model.encode,
     ),
     ".worldSaveData.ItemContainerSaveData.Value.RawData": (
         item_container.decode,
@@ -89,7 +83,6 @@ PALWORLD_CUSTOM_PROPERTIES: dict[
         character_container.decode,
         character_container.encode,
     ),
-    # DynamicItemSaveData is problematic because serialisation is dependent on type, which is not immediately obvious
     ".worldSaveData.DynamicItemSaveData.DynamicItemSaveData.RawData": (
         dynamic_item.decode,
         dynamic_item.encode,
@@ -114,15 +107,22 @@ PALWORLD_CUSTOM_PROPERTIES: dict[
         work_collection.decode,
         work_collection.encode,
     ),
-    # ".worldSaveData.BaseCampSaveData.Value.ModuleMap": (base_camp_module.decode, base_camp_module.encode),
+    ".worldSaveData.BaseCampSaveData.Value.ModuleMap": (
+        base_camp_module.decode,
+        base_camp_module.encode,
+    ),
     ".worldSaveData.WorkSaveData": (work.decode, work.encode),
-    # ".worldSaveData.WorkSaveData.WorkSaveData.RawData": (debug.decode, debug.encode),
-    # ".worldSaveData.WorkSaveData.WorkSaveData.WorkAssignMap.Value.RawData": (debug.decode, debug.encode),
-    # ConcreteModel is problematic because serialisation is dependent on type, which is not immediately obvious
-    # ".worldSaveData.MapObjectSaveData.MapObjectSaveData.ConcreteModel": (
-    #     decode_map_concrete_model,
-    #     encode_map_concrete_model,
+    # ".worldSaveData.MapObjectSaveData": (
+    #     map_object.decode,
+    #     map_object.encode,
     # ),
-    # ".worldSaveData.MapObjectSaveData.MapObjectSaveData.ConcreteModel.RawData": (),
-    # ".worldSaveData.MapObjectSaveData.MapObjectSaveData.ConcreteModel.ModuleMap.Value.RawData": (),
+}
+
+# List of properties that are not working with newer versions
+DISABLED_PROPERTIES = {
+    ".worldSaveData.BaseCampSaveData.Value.ModuleMap",
+    ".worldSaveData.MapObjectSaveData",
+    # Broken in v0.3.7 - memory optimisation, UObject fields encoded into raw data
+    # Parsing behaviour can be controlled with CustomVersionData
+    ".worldSaveData.ItemContainerSaveData.Value.Slots.Slots.RawData",
 }
